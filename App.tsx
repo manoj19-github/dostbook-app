@@ -5,7 +5,8 @@
  * @format
  */
 
-import React from 'react';
+import React, {Fragment} from 'react';
+import Toast from 'react-native-toast-message';
 import {
   SafeAreaView,
   StyleSheet,
@@ -13,16 +14,14 @@ import {
   useColorScheme,
   View,
 } from 'react-native';
+import Navigation from './navigations/Navigation';
 
 function App(): React.JSX.Element {
   return (
-    <SafeAreaView>
-      <View>
-        <Text className="text-red-500 text-2xl " style={{color: 'red'}}>
-          app
-        </Text>
-      </View>
-    </SafeAreaView>
+    <Fragment>
+      <Navigation />
+      <Toast />
+    </Fragment>
   );
 }
 
