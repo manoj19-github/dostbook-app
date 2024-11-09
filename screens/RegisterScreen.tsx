@@ -23,10 +23,8 @@ import Toast from 'react-native-toast-message';
 import {useStoreManagement} from '../store/useStoreManagement';
 import {resetAndNavigate} from '../utils/NavigationUtils';
 
-type GettingStartedScreenProps = {
-  navigation?: any;
-};
-const GettingStartedScreen: FC<GettingStartedScreenProps> = ({navigation}) => {
+type GettingStartedScreenProps = {};
+const GettingStartedScreen: FC<GettingStartedScreenProps> = ({}) => {
   const appState = useAppState();
   const storeManagement = useStoreManagement();
   const registrationService = useRegistrationService();

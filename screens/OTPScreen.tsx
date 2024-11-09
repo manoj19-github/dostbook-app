@@ -24,10 +24,8 @@ import {OTPSchemaScreen} from '../formSchema/OTPSchema.formSchema';
 import useOTPService from '../services/useOTPService';
 import {resetAndNavigate} from '../utils/NavigationUtils';
 
-type OTPScreenProps = {
-  navigation?: any;
-};
-const OTPScreen: FC<OTPScreenProps> = ({navigation}) => {
+type OTPScreenProps = {};
+const OTPScreen: FC<OTPScreenProps> = ({}) => {
   const appState = useAppState();
 
   const storeManagement = useStoreManagement();
