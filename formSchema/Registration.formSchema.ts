@@ -9,3 +9,10 @@ export const RegistrationSchema = Z.object({
     message: 'Name must be greater than 3 characters',
   }),
 });
+
+
+export interface RegistrationPayloadTypes {
+  email: string;
+  name: string;
+  phoneNumber: string;
+}

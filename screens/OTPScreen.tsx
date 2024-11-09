@@ -10,23 +10,80 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
 } from 'react-native';
-import React, {FC, useState} from 'react';
+import React, {FC, useCallback, useEffect, useState} from 'react';
 import {z} from 'zod';
 import OTPTextInput from 'react-native-otp-textinput';
 import {zodResolver} from '@hookform/resolvers/zod';
 import {useForm, Controller} from 'react-hook-form';
 import {useAppState} from '../store/useAppState';
+import Toast from 'react-native-toast-message';
+import {useStoreManagement} from '../store/useStoreManagement';
+import {OTPSchemaScreen} from '../formSchema/OTPSchema.formSchema';
+import useOTPService from '../services/useOTPService';
 
-type OTPScreenProps = {};
-const OTPScreen: FC<OTPScreenProps> = () => {
+type OTPScreenProps = {
+  navigation?: any;
+};
+const OTPScreen: FC<OTPScreenProps> = ({navigation}) => {
   const appState = useAppState();
-  const [code, setcode] = useState<string>('');
 
-  const onSubmit = (values: z.infer<typeof OTPSchema>) => {
-    console.log('values: ', values);
-    appState.setIsLoading(true);
-    if (appState.isLoading) return;
-  };
+  const storeManagement = useStoreManagement();
+  const otpService = useOTPService();
+  const FormHandler = useForm<z.infer<typeof OTPSchemaScreen>>({
+    resolver: zodResolver(OTPSchemaScreen),
+    defaultValues: {
+      email: '',
+      otpVal: '',
+    },
+  });
+
+  const onSubmitHandler = useCallback(
+    (values: z.infer<typeof OTPSchemaScreen>) => {
+      if (appState.isLoading) return;
+      if (storeManagement.currEmail === '') {
+        navigation.navigate('RegisterScreen');
+        return Toast.show({
+          type: 'error',
+          text1: 'Please Register Yourself Properly',
+          text2: 'Please try again',
+        });
+      }
+      appState.setIsLoading(true);
+
+      otpService.mutate(values, {
+        onSuccess: _result => {
+          Toast.show({
+            type: 'success',
+            text1: 'Successfully Verified Your Email',
+            text2: 'Welcome to Dostbook',
+          });
+          navigation.navigate('DashboardScreen');
+        },
+        onError: _error => {
+          console.log('error: ', _error);
+          Toast.show({
+            type: 'error',
+            text1: _error?.response?.data?.message || 'Registration Failed',
+            text2: 'Please try again',
+          });
+        },
+        onSettled: () => {
+          appState.setIsLoading(false);
+        },
+      });
+    },
+    [appState, navigation, otpService, storeManagement.currEmail],
+  );
+
+  useEffect(() => {
+    FormHandler.setValue('email', storeManagement.currEmail);
+  }, [FormHandler, storeManagement.currEmail]);
+
+  useEffect(() => {
+    if (FormHandler.watch('otpVal').length === 5) {
+      FormHandler.handleSubmit(onSubmitHandler)();
+    }
+  }, [FormHandler, onSubmitHandler]);
 
   return (
     <SafeAreaView style={OTPScreenStyles.container}>
@@ -40,12 +97,20 @@ const OTPScreen: FC<OTPScreenProps> = () => {
       <View style={OTPScreenStyles.mobileInputContainer}>
         <Text style={OTPScreenStyles.mobileLabelText}>Enter your OTP</Text>
         <View>
-          <OTPTextInput
-            handleTextChange={value => {}}
-            inputCount={5}
-            inputCellLength={1}
-            tintColor="#4984CA72"
-            keyboardType="default"
+          <Controller
+            name="otpVal"
+            control={FormHandler.control}
+            render={({field: {onChange, value}}) => (
+              <OTPTextInput
+                handleTextChange={value => onChange(value)}
+                defaultValue={value}
+                inputCount={5}
+                inputCellLength={1}
+                tintColor="#4984CA72"
+                keyboardType="default"
+                autoFocus
+              />
+            )}
           />
         </View>
       </View>

@@ -18,12 +18,14 @@ import LoaderKit from 'react-native-loader-kit';
 
 import useGettingStartedService from '../services/useGettingStartedService';
 import {useNavigation} from '@react-navigation/native';
+import {useStoreManagement} from '../store/useStoreManagement';
 
 type GettingStartedScreenProps = {
   navigation: any;
 };
 const GettingStartedScreen: FC<GettingStartedScreenProps> = ({navigation}) => {
   const appState = useAppState();
+  const storeManagement = useStoreManagement();
 
   const gettingStartedService = useGettingStartedService();
   const FormHandler = useForm<z.infer<typeof GettingStartedSchema>>({
@@ -42,6 +44,7 @@ const GettingStartedScreen: FC<GettingStartedScreenProps> = ({navigation}) => {
       {phoneNumber: values.mobile},
       {
         onSuccess(result: any) {
+          storeManagement.setCurrMobile(values.mobile);
           if (result?.data?.message)
             Toast.show({
               type: 'success',

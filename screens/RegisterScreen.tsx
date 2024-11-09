@@ -14,12 +14,21 @@ import {zodResolver} from '@hookform/resolvers/zod';
 import {useForm, Controller} from 'react-hook-form';
 import {useAppState} from '../store/useAppState';
 import LoaderKit from 'react-native-loader-kit';
-import {RegistrationSchema} from '../formSchema/Registration.formSchema';
-import CustomSafeAreaView from '../components/CustomSafeAreaView';
+import {
+  RegistrationPayloadTypes,
+  RegistrationSchema,
+} from '../formSchema/Registration.formSchema';
+import useRegistrationService from '../services/useRegistrationService';
+import Toast from 'react-native-toast-message';
+import {useStoreManagement} from '../store/useStoreManagement';
 
-type GettingStartedScreenProps = {};
-const GettingStartedScreen: FC<GettingStartedScreenProps> = () => {
+type GettingStartedScreenProps = {
+  navigation?: any;
+};
+const GettingStartedScreen: FC<GettingStartedScreenProps> = ({navigation}) => {
   const appState = useAppState();
+  const storeManagement = useStoreManagement();
+  const registrationService = useRegistrationService();
   const FormHandler = useForm<z.infer<typeof RegistrationSchema>>({
     resolver: zodResolver(RegistrationSchema),
     defaultValues: {
@@ -28,10 +37,43 @@ const GettingStartedScreen: FC<GettingStartedScreenProps> = () => {
     },
   });
 
-  const onSubmit = (values: z.infer<typeof RegistrationSchema>) => {
-    console.log('values: ', values);
-    appState.setIsLoading(true);
+  const onSubmitHandler = (values: z.infer<typeof RegistrationSchema>) => {
     if (appState.isLoading) return;
+    if (storeManagement.currMobile === '') {
+      navigation.navigate('GettingStartedScreen');
+      Toast.show({
+        type: 'error',
+        text1: 'Please enter your mobile number',
+        text2: 'Please try again',
+      });
+    }
+    appState.setIsLoading(true);
+    const _registrationPayload: RegistrationPayloadTypes = {
+      ...values,
+      phoneNumber: storeManagement.currMobile,
+    };
+    registrationService.mutate(_registrationPayload, {
+      onSuccess: _result => {
+        storeManagement.setCurrEmail(values.email);
+        Toast.show({
+          type: 'success',
+          text1: 'Registration Success',
+          text2: 'Please check your email to verify your account',
+        });
+        navigation.navigate('OTPScreen');
+      },
+      onError: _error => {
+        console.log('error: ', _error);
+        Toast.show({
+          type: 'error',
+          text1: _error?.response?.data?.message || 'Registration Failed',
+          text2: 'Please try again',
+        });
+      },
+      onSettled: () => {
+        appState.setIsLoading(false);
+      },
+    });
   };
 
   return (
@@ -98,7 +140,7 @@ const GettingStartedScreen: FC<GettingStartedScreenProps> = () => {
       <View style={GettingStartedScreenStyles.continueWrapper}>
         <TouchableOpacity
           style={GettingStartedScreenStyles.continueButton}
-          onPress={FormHandler.handleSubmit(onSubmit)}
+          onPress={FormHandler.handleSubmit(onSubmitHandler)}
           disabled={appState.isLoading}>
           <View style={GettingStartedScreenStyles.continueBtnWrapper}>
             <Text style={GettingStartedScreenStyles.continueText}>
