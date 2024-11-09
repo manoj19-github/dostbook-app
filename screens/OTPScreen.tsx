@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import {
   View,
   Text,
@@ -10,6 +11,7 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
 } from 'react-native';
+import LoaderKit from 'react-native-loader-kit';
 import React, {FC, useCallback, useEffect, useState} from 'react';
 import {z} from 'zod';
 import OTPTextInput from 'react-native-otp-textinput';
@@ -20,6 +22,7 @@ import Toast from 'react-native-toast-message';
 import {useStoreManagement} from '../store/useStoreManagement';
 import {OTPSchemaScreen} from '../formSchema/OTPSchema.formSchema';
 import useOTPService from '../services/useOTPService';
+import {resetAndNavigate} from '../utils/NavigationUtils';
 
 type OTPScreenProps = {
   navigation?: any;
@@ -33,57 +36,48 @@ const OTPScreen: FC<OTPScreenProps> = ({navigation}) => {
     resolver: zodResolver(OTPSchemaScreen),
     defaultValues: {
       email: '',
-      otpVal: '',
+      otp: '',
     },
   });
 
-  const onSubmitHandler = useCallback(
-    (values: z.infer<typeof OTPSchemaScreen>) => {
-      if (appState.isLoading) return;
-      if (storeManagement.currEmail === '') {
-        navigation.navigate('RegisterScreen');
-        return Toast.show({
+  const onSubmitHandler = (values: z.infer<typeof OTPSchemaScreen>) => {
+    if (appState.isLoading) return;
+    if (storeManagement.currEmail === '') {
+      resetAndNavigate('RegisterScreen');
+      return Toast.show({
+        type: 'error',
+        text1: 'Please Register Yourself Properly',
+        text2: 'Please try again',
+      });
+    }
+    appState.setIsLoading(true);
+
+    otpService.mutate(values, {
+      onSuccess: _result => {
+        Toast.show({
+          type: 'success',
+          text1: 'Successfully Verified Your Email',
+          text2: 'Welcome to Dostbook',
+        });
+
+        resetAndNavigate('DashboardScreen');
+      },
+      onError: _error => {
+        Toast.show({
           type: 'error',
-          text1: 'Please Register Yourself Properly',
+          text1: 'Registration Failed',
           text2: 'Please try again',
         });
-      }
-      appState.setIsLoading(true);
-
-      otpService.mutate(values, {
-        onSuccess: _result => {
-          Toast.show({
-            type: 'success',
-            text1: 'Successfully Verified Your Email',
-            text2: 'Welcome to Dostbook',
-          });
-          navigation.navigate('DashboardScreen');
-        },
-        onError: _error => {
-          console.log('error: ', _error);
-          Toast.show({
-            type: 'error',
-            text1: _error?.response?.data?.message || 'Registration Failed',
-            text2: 'Please try again',
-          });
-        },
-        onSettled: () => {
-          appState.setIsLoading(false);
-        },
-      });
-    },
-    [appState, navigation, otpService, storeManagement.currEmail],
-  );
+      },
+      onSettled: () => {
+        appState.setIsLoading(false);
+      },
+    });
+  };
 
   useEffect(() => {
     FormHandler.setValue('email', storeManagement.currEmail);
   }, [FormHandler, storeManagement.currEmail]);
-
-  useEffect(() => {
-    if (FormHandler.watch('otpVal').length === 5) {
-      FormHandler.handleSubmit(onSubmitHandler)();
-    }
-  }, [FormHandler, onSubmitHandler]);
 
   return (
     <SafeAreaView style={OTPScreenStyles.container}>
@@ -98,7 +92,7 @@ const OTPScreen: FC<OTPScreenProps> = ({navigation}) => {
         <Text style={OTPScreenStyles.mobileLabelText}>Enter your OTP</Text>
         <View>
           <Controller
-            name="otpVal"
+            name="otp"
             control={FormHandler.control}
             render={({field: {onChange, value}}) => (
               <OTPTextInput
@@ -112,6 +106,27 @@ const OTPScreen: FC<OTPScreenProps> = ({navigation}) => {
               />
             )}
           />
+        </View>
+        <View style={OTPScreenStyles.continueWrapper}>
+          <TouchableOpacity
+            style={OTPScreenStyles.continueButton}
+            onPress={FormHandler.handleSubmit(onSubmitHandler)}
+            disabled={
+              appState.isLoading || FormHandler.watch('otp').length !== 5
+            }>
+            <View style={OTPScreenStyles.continueBtnWrapper}>
+              <Text style={OTPScreenStyles.continueText}>Continue</Text>
+              {appState.isLoading ? (
+                <LoaderKit
+                  style={OTPScreenStyles.loader}
+                  name={'BallSpinFadeLoader'} // Optional: see list of animations below
+                  color={'white'} // Optional: color can be: 'red', 'green',... or '#ddd', '#ffffff',...
+                />
+              ) : (
+                <></>
+              )}
+            </View>
+          </TouchableOpacity>
         </View>
       </View>
     </SafeAreaView>
@@ -130,8 +145,8 @@ const OTPScreenStyles = StyleSheet.create({
     alignItems: 'center',
   },
   continueWrapper: {
-    marginTop: 20,
-    width: '84%',
+    marginTop: 40,
+    width: '100%',
   },
   mobileInputHintText: {
     color: 'red',

@@ -35,7 +35,7 @@ const useOTPService = () => {
         setData(undefined);
         setSettled(false);
         setError(undefined);
-        const result = await restService.post(urls.registration, values);
+        const result = await restService.post(urls.verifyOTP, values);
         options?.onSuccess?.(result);
         setAPIStatus(APISTATUSENUM.SUCCESS);
         setData(result);

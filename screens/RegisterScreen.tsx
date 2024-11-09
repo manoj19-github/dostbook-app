@@ -21,6 +21,7 @@ import {
 import useRegistrationService from '../services/useRegistrationService';
 import Toast from 'react-native-toast-message';
 import {useStoreManagement} from '../store/useStoreManagement';
+import {resetAndNavigate} from '../utils/NavigationUtils';
 
 type GettingStartedScreenProps = {
   navigation?: any;
@@ -40,7 +41,7 @@ const GettingStartedScreen: FC<GettingStartedScreenProps> = ({navigation}) => {
   const onSubmitHandler = (values: z.infer<typeof RegistrationSchema>) => {
     if (appState.isLoading) return;
     if (storeManagement.currMobile === '') {
-      navigation.navigate('GettingStartedScreen');
+      resetAndNavigate('GettingStartedScreen');
       Toast.show({
         type: 'error',
         text1: 'Please enter your mobile number',
@@ -60,7 +61,7 @@ const GettingStartedScreen: FC<GettingStartedScreenProps> = ({navigation}) => {
           text1: 'Registration Success',
           text2: 'Please check your email to verify your account',
         });
-        navigation.navigate('OTPScreen');
+        resetAndNavigate('OTPScreen');
       },
       onError: _error => {
         console.log('error: ', _error);

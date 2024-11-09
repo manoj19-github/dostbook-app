@@ -1,8 +1,8 @@
 import * as Z from 'zod';
 export const OTPSchemaScreen = Z.object({
-  otpVal: Z.string({invalid_type_error: 'Must be a string'}).refine(
-    value => /^(\+\d{1,3}[- ]?)?\d{10}$/gm.test(value ?? ''),
-    'invalid phone number',
+  otp: Z.string({invalid_type_error: 'Must be a string'}).min(
+    5,
+    'Must be 5 digits',
   ),
   email: Z.string({invalid_type_error: 'Must be a string'}).refine(
     value =>

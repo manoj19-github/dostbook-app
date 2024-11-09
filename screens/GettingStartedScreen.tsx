@@ -19,6 +19,7 @@ import LoaderKit from 'react-native-loader-kit';
 import useGettingStartedService from '../services/useGettingStartedService';
 import {useNavigation} from '@react-navigation/native';
 import {useStoreManagement} from '../store/useStoreManagement';
+import {resetAndNavigate} from '../utils/NavigationUtils';
 
 type GettingStartedScreenProps = {
   navigation: any;
@@ -52,7 +53,7 @@ const GettingStartedScreen: FC<GettingStartedScreenProps> = ({navigation}) => {
               text2: result.data.message,
             });
           if (result?.data?.navigateTo) {
-            navigation.navigate(result.data.navigateTo);
+            resetAndNavigate(result.data.navigateTo);
           }
           console.log('====================================');
           console.log('result in success >>>>> ', result?.data);

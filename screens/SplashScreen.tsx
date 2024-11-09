@@ -10,6 +10,7 @@ const SplashScreen: FC<SplashScreenProps> = (): JSX.Element => {
   const timerRef = useRef<any>(null);
   const tokenCheck = async () => {
     resetAndNavigate('GettingStartedScreen');
+    // resetAndNavigate('OTPScreen');
   };
 
   useEffect(() => {
